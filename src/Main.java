@@ -1,19 +1,59 @@
+import java.util.Random;
 
 public class Main {
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 
-		Board board = new Board(4);
+		Board board = new Board(6);
 		board.print();
-		board.printStatus();
+		board.updateAttackStatus();
+		board.printAttackStatus();
+//		System.out.println(board.getNumberOfAttackedQueens());
+//		board.getSuccessor();
+
+		Board solvedBoard = SimulatedAnnealing(board);
+		
+		solvedBoard.print();
 	}
 
-	public void SimulatedAnnealing(Board board) {
+	public static Board SimulatedAnnealing(Board board) {
 		Board currentBoard = board;
 		Board nextBoard;
+		Random random = new Random();
 		
+		int deltaE;
 		
+		for(int t = 0; t < 10; t++) {
+			double T = getScheduleValue(t+1);
+//			if(T = 0) {
+//				return currentBoard;
+//			}
+			
+			nextBoard = currentBoard.getSuccessor();
+			deltaE = nextBoard.getNumberOfAttackedQueens() - currentBoard.getNumberOfAttackedQueens();
+		
+			if (deltaE > 0) {
+				currentBoard = nextBoard;
+			} else {
+//				//calculate probability
+				//deltaE is negative
+				double probability = Math.exp(deltaE / T);
+				System.out.println("Probability = " + probability);
+				double randomValue = random.nextDouble();
+				System.out.println("Random = " + randomValue);
+				
+				if(randomValue < probability) {
+					currentBoard = nextBoard;
+				}
+			}
+		}
+		
+		return currentBoard;
+	}
+		
+	public static double getScheduleValue(int t) {
+		return 100/t;
 	}
 	
 //	public SolutionState SimulatedAnnealing(Problem problem, Schedule schedule) {
