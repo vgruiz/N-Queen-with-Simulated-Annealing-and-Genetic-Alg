@@ -7,7 +7,8 @@ public class Board {
 	boolean[] attackStatus;
 	int n;
 	Random random = new Random();
-	
+	double fitness;
+
 	public Board(int n) {
 		//gameBoard = new Queen[8][8];
 		queens = new int[n];
@@ -16,20 +17,28 @@ public class Board {
 		this.n = n;
 		setInitialPositions();
 	}
-	
+
 	public Board(int[] queenArray) {
 		queens = queenArray;
 		n = queens.length;
 		attackStatus = new boolean[n];
 		Arrays.fill(attackStatus, false);
 	}
-	
+
+	public int getFitness() {
+		int x = getNumberOfAttackedQueens();
+
+		fitness = x;
+
+		return 0;
+	}
+
 	public void setInitialPositions() {
 		for(int i = 0; i < queens.length; i++) {
 			queens[i] = random.nextInt(n);
 		}
 	}
-	
+
 	public void print() {
 		for(int j = 0; j < n; j++) {
 			for(int i = 0; i < n; i++) {
@@ -40,42 +49,42 @@ public class Board {
 				} else if(queens[i] == j) {
 					System.out.print(" X ");
 				} else {
-					System.out.print(" | ");					
+					System.out.print(" | ");
 				}
-				
+
 			}
 		}
 	}
-	
+
 	//TODO: Finish this lol
 	public void generateRandomSuccessor() {
 		int randCol = random.nextInt(n);
 		int randRow = random.nextInt(n);
-		
+
 		queens[randCol] = randRow;
-		
+
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param column
 	 * @returns true if it is in an attack position, if it is in the same row or diagonal as another queen
 	 */
 	public boolean isAttacked(int column) {
 		int col = column;
 		int row = queens[column];
-		
+
 		for(int i = 0; i < queens.length; i++) {
 			if(i == col && queens[i] == row) {
 				continue;
 			}
-			
+
 			//checking for horizontals
 			if(queens[i] == row) {
 				//System.out.println("Horizontal @ "+ queens[i] + ", " + i + " and " + row +", " + col);
 				return true;
 			}
-			
+
 			//checking for diagonals
 			int colDiff = Math.abs(i - col);
 			int rowDiff = Math.abs(queens[i] - row);
@@ -83,25 +92,25 @@ public class Board {
 				return true;
 			}
 		}
-		
+
 		return false;
 	}
-	
+
 	public void updateAttackStatus() {
 		//wipe the array
 		Arrays.fill(attackStatus, false);
-		
+
 		for(int i = 0; i < queens.length; i++) {
 			// if this loop finds a conflict, it sets both columns get attackStatus[x] set to true
-			
-			
+
+
 			//System.out.println(attackStatus[1]);
 			if(attackStatus[i] == false) {
-				
+
 				for(int j = 0; j < queens.length; j++) {
 					if(i == j) {
 						continue;
-					}					
+					}
 					int colDiff = Math.abs(i - j);
 					int rowDiff = Math.abs(queens[i] - queens[j]);
 					if (rowDiff == colDiff) {
@@ -117,34 +126,34 @@ public class Board {
 			}
 		}
 	}
-	
+
 	public int getNumberOfAttackedQueens() {
 		int count = 0;
-		
+
 		updateAttackStatus();
-		
+
 		for(int i = 0; i < queens.length; i++) {
 			if(attackStatus[i]) { count++; }
 		}
-		
+
 		return count;
 	}
-	
+
 	public void printStatus() {
 		for(int i = 0; i < queens.length; i++) {
 			System.out.println(queens[i] + " " + i);
 		}
-		
+
 		for(int i = 0; i < queens.length; i++) {
 			for(int j = 0; j < queens.length; j++) {
 				if(i == j && queens[i] == queens[j]) {
 					continue;
 				}
-				
+
 				if(queens[i] == queens[j]) {
 					System.out.println("Horizontal @ "+ queens[i] + ", " + i + " and " + queens[j]+", " + j);
 				}
-				
+
 				//checking for diagonals
 				int colDiff = Math.abs(i - j);
 				int rowDiff = Math.abs(queens[i] - queens[j]);
@@ -154,51 +163,56 @@ public class Board {
 			}
 		}
 	}
-	
+
 	public void printAttackStatus()	{
 		for(int i = 0; i < attackStatus.length; i++) {
 			if(attackStatus[i]) {
 				System.out.print(" T ");
 			} else {
-				System.out.print(" _ ");				
+				System.out.print(" _ ");
 			}
 		}
 		System.out.println();
 	}
-	
+
 	public void isSolved() {}
 
 	public Board getSuccessor() {
-		
+		int totalLoopCount = 0;
+
 		//select a queen in attack position
 		updateAttackStatus();
-		
+
 		int[] queenArrayCopy = new int[n];
 		System.arraycopy(queens, 0, queenArrayCopy, 0, queens.length);
 
 		int column = random.nextInt(n);
-		
-		while(column < attackStatus.length){			
+
+		while(column < attackStatus.length){
 			if(attackStatus[column] == true) {
 				break;
 			} else {
-				System.out.println("not being attacked " + column);
+				//System.out.println("not being attacked " + column);
 			}
-			
+
 			column++;
 			if(column == attackStatus.length) {
 				column = 0;
 			}
+			totalLoopCount++;
+			if(totalLoopCount == n) {
+				break;
+			}
 		}
-		
-		System.out.println("successor column: " + column);
-		
+
+		//System.out.println("successor column: " + column);
+
 		//move queen randomly
 		queenArrayCopy[column] = random.nextInt(n);
-		
+
 		//return board
-		
+
 		return new Board(queenArrayCopy);
 	}
-	
+
 }
