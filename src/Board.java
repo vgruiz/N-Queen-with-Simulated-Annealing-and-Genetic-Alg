@@ -2,12 +2,13 @@ import java.util.Arrays;
 import java.util.Random;
 
 public class Board {
-//	Queen[][] gameBoard;
 	int[] queens;
 	boolean[] attackStatus;
 	int n;
 	Random random = new Random();
 	double fitness;
+	double fitnessProbability;
+	double maxFitness;
 
 	public Board(int n) {
 		//gameBoard = new Queen[8][8];
@@ -16,6 +17,7 @@ public class Board {
 		Arrays.fill(attackStatus, false);
 		this.n = n;
 		setInitialPositions();
+		maxFitness = n * (n-1)/2;
 	}
 
 	public Board(int[] queenArray) {
@@ -23,15 +25,38 @@ public class Board {
 		n = queens.length;
 		attackStatus = new boolean[n];
 		Arrays.fill(attackStatus, false);
+		maxFitness = n * (n-1)/2;
 	}
 
+	/**
+	 * 
+	 * @return the number of non-attacking pairs of queens
+	 */
 	public int getFitness() {
-		int x = getNumberOfAttackedQueens();
+		//for each queen, only check if it is NOT attacking any of the queens in columns greater than the current one.
+		
+		int fitness = 0;
+		
+		for(int i = 0; i < n; i++) {
+			//int curColumn = i;
+			int curRow = queens[i];
 
-		fitness = x;
-
-		return 0;
+			for(int j = i+1; j < n; j++) {
+				//now for every column i we are checking, we will start with j which is starting at i + 1
+				int colDiff = Math.abs(i - j);
+				int rowDiff = Math.abs(curRow - queens[j]);
+	
+				if (rowDiff != colDiff && curRow != queens[j]) {
+					fitness++; //for the queens in column i and j, they do not land on the same row or same diagonal, and therefore are a non-attacking pair
+				}
+				
+			}
+		}
+		
+		this.fitness = fitness;
+		return fitness;
 	}
+	
 
 	public void setInitialPositions() {
 		for(int i = 0; i < queens.length; i++) {
@@ -54,15 +79,6 @@ public class Board {
 
 			}
 		}
-	}
-
-	//TODO: Finish this lol
-	public void generateRandomSuccessor() {
-		int randCol = random.nextInt(n);
-		int randRow = random.nextInt(n);
-
-		queens[randCol] = randRow;
-
 	}
 
 	/**
@@ -213,6 +229,34 @@ public class Board {
 		//return board
 
 		return new Board(queenArrayCopy);
+	}
+
+	public Board reproduceWith(Board boardY) {
+		Board x = this;
+		Board y = boardY;
+		Board child = new Board(x.n);
+		
+		Random random = new Random();
+		int c = random.nextInt(n);
+
+		for(int i = 0; i < x.n; i++) {
+			if(i < c) {
+				child.queens[i] = x.queens[i];
+			} else {
+				child.queens[i] = y.queens[i];
+			}
+		}
+		
+		return child;
+	}
+
+	public Board mutate() {
+		Random random = new Random();
+		int randomColumn = random.nextInt(n);
+		
+		queens[randomColumn] = random.nextInt(n);
+		
+		return this;
 	}
 
 }
