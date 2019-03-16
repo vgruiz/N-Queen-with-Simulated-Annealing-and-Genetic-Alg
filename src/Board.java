@@ -68,13 +68,13 @@ public class Board {
 		for(int j = 0; j < n; j++) {
 			for(int i = 0; i < n; i++) {
 				if(i == n - 1 && queens[i] == j) {
-					System.out.println(" X ");
+					System.out.println("Q ");
 				} else if(i == n - 1) {
-					System.out.println(" | ");
+					System.out.println("- ");
 				} else if(queens[i] == j) {
-					System.out.print(" X ");
+					System.out.print("Q ");
 				} else {
-					System.out.print(" | ");
+					System.out.print("- ");
 				}
 
 			}
@@ -191,7 +191,17 @@ public class Board {
 		System.out.println();
 	}
 
-	public void isSolved() {}
+	public boolean isSolved() {
+		updateAttackStatus();
+		
+		for(int i = 0; i < n; i++) {
+			if(isAttacked(i)) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
 
 	public Board getSuccessor() {
 		int totalLoopCount = 0;

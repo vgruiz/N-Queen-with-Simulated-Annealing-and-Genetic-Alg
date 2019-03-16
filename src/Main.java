@@ -1,29 +1,98 @@
+import java.io.BufferedWriter;
+import java.io.DataOutputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Random;
 
 public class Main {
 	
-	static double MUTATION_PROBABILITY = .9;
-	static int BOARD_SIZE = 25;
-	static int POPULATION_SIZE = 50;
+	final static double MUTATION_PROBABILITY = .8;
+	final static int BOARD_SIZE = 25;
+	final static int POPULATION_SIZE = 50;
 	
+	static int totalGenerationCount = 0;
+	static int numIncorrectSolutions = 0;
 
-	public static void main(String[] args) {	
+	public static void main(String[] args) throws IOException {	
+		
+		System.out.println("SIMULATED ANNEALING");
+		
+		for(int i = 0; i < 3; i++) {
+			Board board = new Board(BOARD_SIZE);
+			Board solution = SimulatedAnnealing(board);
+			solution.print();
+			System.out.println();
+		}
+		
+		System.out.println("\n\nGENETIC ALGORITHM");
+		
+		for(int i = 0; i < 3; i++) {
+			Board[] boards = new Board[POPULATION_SIZE];
+			for(int j = 0; j < boards.length; j++) {
+				boards[j] = new Board(BOARD_SIZE);
+			}
+			Board solution = GeneticAlgorithm(boards);
+			solution.print();
+			System.out.println();
+		}
+		
+		//runSimulatedAnnealing();
+	
+//		for(int i = 1; i < 21; i++) {
+//			MUTATION_PROBABILITY  = 0 + (i*.05);
+//			System.out.println("MUTATION RATE: " + MUTATION_PROBABILITY);
+//			
+//			runGeneticAlgorithm();
+//			runGeneticAlgorithm();
+//			runGeneticAlgorithm();
+//		}
+		
+		//BufferedWriter out = new BufferedWriter(new FileWriter("output.txt"));
 
-		runSimulatedAnnealing();
-	
-		//runGeneticAlgorithm();
-	
+		
+//		for(int i = 0; i < 1000; i++) {
+//			long startTime = System.currentTimeMillis();
+//			runSimulatedAnnealing();
+//			long endTime = System.currentTimeMillis();
+//			int time = (int) (endTime - startTime);
+//			out.write(String.valueOf(time) + "\n");
+//		}
+//		
+//		double percentAccuracy = (1000 - numIncorrectSolutions) / 1000;
+//		System.out.println("Accuracy: " + percentAccuracy);
+		
+//		for(int i = 0; i < 1000; i++) {
+//			//long startTime = System.currentTimeMillis();
+//			runGeneticAlgorithm();
+//			//long endTime = System.currentTimeMillis();
+//			//int time = (int) (endTime - startTime);
+//			//out.write(String.valueOf(time) + "\n");
+//		}
+		//System.out.println("total: " + totalGenerationCount);
+		
+//		double percentAccuracy = (1000 - numIncorrectSolutions) / 1000;
+//		System.out.println("Accuracy: " + percentAccuracy);
+//		
+//		out.close();
+		
 	}
 	
 	public static void runSimulatedAnnealing() {
 		Board board = new Board(25);
-		board.print();
+		//board.print();
 		board.updateAttackStatus();
-		board.printAttackStatus();
+		//board.printAttackStatus();
 		
 		Board solvedBoard = SimulatedAnnealing(board);
-		solvedBoard.print();
-		solvedBoard.printAttackStatus();
+		if(!solvedBoard.isSolved()) {
+			numIncorrectSolutions++;
+		}
+
+		//System.out.println(numIncorrectSolutions);
+		//solvedBoard.print();
+		//solvedBoard.printAttackStatus();
 	}
 	
 	public static void runGeneticAlgorithm() {
@@ -34,8 +103,14 @@ public class Main {
 		}
 		
 		Board solution = GeneticAlgorithm(boards);
-		solution.print();
-		solution.printAttackStatus();
+		
+		if(!solution.isSolved()) {
+			numIncorrectSolutions++;
+		}
+		
+		System.out.println(numIncorrectSolutions);
+		//solution.print();
+		//solution.printAttackStatus();
 	}
 
 	public static Board GeneticAlgorithm(Board[] boards) {
@@ -51,8 +126,9 @@ public class Main {
 			
 			//checking if the best board in the population is at the maximum fitness value
 			if(population[population.length - 1].getFitness() == population[0].maxFitness) {
-				System.out.println("Solution Found");
-				System.out.println("# of generations: " + generation);
+				//System.out.println("Solution Found");
+				//System.out.println(generation);
+				totalGenerationCount = totalGenerationCount + generation;
 				return population[population.length - 1];
 			}
 			
@@ -65,34 +141,12 @@ public class Main {
 					child = child.mutate();
 					//System.out.println("mutation occured");
 				}
-
-				//System.out.println(boardX.getFitness());
-				//System.out.println(boardY.getFitness());
-				//System.out.println(child.getFitness());
-				//System.out.println();
 				
 				newPopulation[i] = child;
 			}
 			
 			population = newPopulation;
 			generation++;
-		}
-		
-		//STOP looping when there is a fit enough individual
-		//RETURN the best individual in population
-
-		int max = 0;
-		//find max fitness value of current population
-		for(int i = 0; i < population.length; i++) {
-			if(population[i].getFitness() > max) {
-				max = population[i].getFitness();
-			}
-		}
-		
-		for(int i = 0; i < population.length; i++) {
-			if(population[i].getFitness() == max) {
-				return population[i];
-			}
 		}
 		
 		return null;
@@ -153,7 +207,8 @@ public class Main {
 			double T = getScheduleValue(t);
 
 			//When temperature is low enough, return currentBoard
-			if(T < .05) {
+			if(T < .1) {
+				//System.out.println(t);
 				return currentBoard;
 			}
 
