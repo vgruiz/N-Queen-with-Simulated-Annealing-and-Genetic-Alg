@@ -2,16 +2,20 @@ import java.util.Arrays;
 import java.util.Random;
 
 public class Board {
-	int[] queens;
-	boolean[] attackStatus;
-	int n;
 	Random random = new Random();
-	double fitness;
-	double fitnessProbability;
-	double maxFitness;
 
+	int[] queens;	//represents the queens' position on the game board
+	boolean[] attackStatus;	//true if queen[i] is in an attack position
+	int n;	//size of the board, n x n
+	double fitness; //number of non-attacking queen pairs
+	double fitnessProbability; //fitness / total fitness of the population (for Genetic Algorithm)
+	double maxFitness;	//stores max fitness value for a board of size n x n
+
+	/**
+	 * Constructor
+	 * @param n, size of the board, n x n
+	 */
 	public Board(int n) {
-		//gameBoard = new Queen[8][8];
 		queens = new int[n];
 		attackStatus = new boolean[n];
 		Arrays.fill(attackStatus, false);
@@ -20,6 +24,10 @@ public class Board {
 		maxFitness = n * (n-1)/2;
 	}
 
+	/**
+	 * Constructor
+	 * @param queenArray, an int array of queen positions
+	 */
 	public Board(int[] queenArray) {
 		queens = queenArray;
 		n = queens.length;
@@ -29,12 +37,19 @@ public class Board {
 	}
 
 	/**
+	 * Randomly sets the queens' position. Used when initializing boards for Simulated Annealing.
+	 */
+	public void setInitialPositions() {
+		for(int i = 0; i < queens.length; i++) {
+			queens[i] = random.nextInt(n);
+		}
+	}
+
+	/**
 	 * 
 	 * @return the number of non-attacking pairs of queens
 	 */
 	public int getFitness() {
-		//for each queen, only check if it is NOT attacking any of the queens in columns greater than the current one.
-		
 		int fitness = 0;
 		
 		for(int i = 0; i < n; i++) {
@@ -57,30 +72,6 @@ public class Board {
 		return fitness;
 	}
 	
-
-	public void setInitialPositions() {
-		for(int i = 0; i < queens.length; i++) {
-			queens[i] = random.nextInt(n);
-		}
-	}
-
-	public void print() {
-		for(int j = 0; j < n; j++) {
-			for(int i = 0; i < n; i++) {
-				if(i == n - 1 && queens[i] == j) {
-					System.out.println("Q ");
-				} else if(i == n - 1) {
-					System.out.println("- ");
-				} else if(queens[i] == j) {
-					System.out.print("Q ");
-				} else {
-					System.out.print("- ");
-				}
-
-			}
-		}
-	}
-
 	/**
 	 *
 	 * @param column
@@ -97,7 +88,6 @@ public class Board {
 
 			//checking for horizontals
 			if(queens[i] == row) {
-				//System.out.println("Horizontal @ "+ queens[i] + ", " + i + " and " + row +", " + col);
 				return true;
 			}
 
@@ -112,17 +102,16 @@ public class Board {
 		return false;
 	}
 
+	/**
+	 * Updated the attackStatus boolean array, which was usually printed. This was primarily used for troubleshooting of other methods.
+	 */
 	public void updateAttackStatus() {
 		//wipe the array
 		Arrays.fill(attackStatus, false);
 
 		for(int i = 0; i < queens.length; i++) {
 			// if this loop finds a conflict, it sets both columns get attackStatus[x] set to true
-
-
-			//System.out.println(attackStatus[1]);
 			if(attackStatus[i] == false) {
-
 				for(int j = 0; j < queens.length; j++) {
 					if(i == j) {
 						continue;
@@ -143,66 +132,10 @@ public class Board {
 		}
 	}
 
-	public int getNumberOfAttackedQueens() {
-		int count = 0;
-
-		updateAttackStatus();
-
-		for(int i = 0; i < queens.length; i++) {
-			if(attackStatus[i]) { count++; }
-		}
-
-		return count;
-	}
-
-	public void printStatus() {
-		for(int i = 0; i < queens.length; i++) {
-			System.out.println(queens[i] + " " + i);
-		}
-
-		for(int i = 0; i < queens.length; i++) {
-			for(int j = 0; j < queens.length; j++) {
-				if(i == j && queens[i] == queens[j]) {
-					continue;
-				}
-
-				if(queens[i] == queens[j]) {
-					System.out.println("Horizontal @ "+ queens[i] + ", " + i + " and " + queens[j]+", " + j);
-				}
-
-				//checking for diagonals
-				int colDiff = Math.abs(i - j);
-				int rowDiff = Math.abs(queens[i] - queens[j]);
-				if (rowDiff == colDiff) {
-					System.out.println("Diagonal @ "+ queens[i] + ", " + i + " and " + queens[j]+", " + j);
-				}
-			}
-		}
-	}
-
-	public void printAttackStatus()	{
-		for(int i = 0; i < attackStatus.length; i++) {
-			if(attackStatus[i]) {
-				System.out.print(" T ");
-			} else {
-				System.out.print(" _ ");
-			}
-		}
-		System.out.println();
-	}
-
-	public boolean isSolved() {
-		updateAttackStatus();
-		
-		for(int i = 0; i < n; i++) {
-			if(isAttacked(i)) {
-				return false;
-			}
-		}
-		
-		return true;
-	}
-
+	/**
+	 * 
+	 * @return a board with a random queen having a random movement within its column
+	 */
 	public Board getSuccessor() {
 		int totalLoopCount = 0;
 
@@ -241,6 +174,11 @@ public class Board {
 		return new Board(queenArrayCopy);
 	}
 
+	/**
+	 * 
+	 * @param boardY
+	 * @return a new offspring of this.queens[] and boardY.queens[]
+	 */
 	public Board reproduceWith(Board boardY) {
 		Board x = this;
 		Board y = boardY;
@@ -260,6 +198,10 @@ public class Board {
 		return child;
 	}
 
+	/**
+	 * 
+	 * @return a Board that has one column randomly changed, a mutation
+	 */
 	public Board mutate() {
 		Random random = new Random();
 		int randomColumn = random.nextInt(n);
@@ -267,6 +209,100 @@ public class Board {
 		queens[randomColumn] = random.nextInt(n);
 		
 		return this;
+	}
+
+	/**
+	 * 
+	 * @return true if the board is solved
+	 */
+	public boolean isSolved() {
+		updateAttackStatus();
+		
+		for(int i = 0; i < n; i++) {
+			if(isAttacked(i)) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
+
+	/**
+	 * 
+	 * @return the number of attacked queens on the board
+	 */
+	public int getNumberOfAttackedQueens() {
+		int count = 0;
+	
+		updateAttackStatus();
+	
+		for(int i = 0; i < queens.length; i++) {
+			if(attackStatus[i]) { count++; }
+		}
+	
+		return count;
+	}
+
+	/**
+	 * Prints the chess board. Q's are queens.
+	 */
+	public void print() {
+		for(int j = 0; j < n; j++) {
+			for(int i = 0; i < n; i++) {
+				if(i == n - 1 && queens[i] == j) {
+					System.out.println("Q ");
+				} else if(i == n - 1) {
+					System.out.println("- ");
+				} else if(queens[i] == j) {
+					System.out.print("Q ");
+				} else {
+					System.out.print("- ");
+				}
+	
+			}
+		}
+	}
+
+	/**
+	 * Used for troubleshooting.
+	 */
+	public void printStatus() {
+		for(int i = 0; i < queens.length; i++) {
+			System.out.println(queens[i] + " " + i);
+		}
+	
+		for(int i = 0; i < queens.length; i++) {
+			for(int j = 0; j < queens.length; j++) {
+				if(i == j && queens[i] == queens[j]) {
+					continue;
+				}
+	
+				if(queens[i] == queens[j]) {
+					System.out.println("Horizontal @ "+ queens[i] + ", " + i + " and " + queens[j]+", " + j);
+				}
+	
+				//checking for diagonals
+				int colDiff = Math.abs(i - j);
+				int rowDiff = Math.abs(queens[i] - queens[j]);
+				if (rowDiff == colDiff) {
+					System.out.println("Diagonal @ "+ queens[i] + ", " + i + " and " + queens[j]+", " + j);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Prints a T under the column if that queen is in an attack position.
+	 */
+	public void printAttackStatus()	{
+		for(int i = 0; i < attackStatus.length; i++) {
+			if(attackStatus[i]) {
+				System.out.print(" T ");
+			} else {
+				System.out.print(" _ ");
+			}
+		}
+		System.out.println();
 	}
 
 }
